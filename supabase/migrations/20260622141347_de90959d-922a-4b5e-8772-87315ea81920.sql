@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_post_owner(UUID, UUID) TO authenticated;
