@@ -37,20 +37,20 @@ export type Application = {
 export async function fetchPosts() {
   const { data, error } = await supabase
     .from("collaboration_posts")
-    .select("*, owner:profiles!collaboration_posts_owner_id_fkey(id, full_name, department, avatar_url)")
+    .select("*, owner:profiles!collaboration_posts_owner_profile_fkey(id, full_name, department, avatar_url)")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as (Post & { owner: Pick<Profile, "id" | "full_name" | "department" | "avatar_url"> | null })[];
+  return (data ?? []) as unknown as (Post & { owner: Pick<Profile, "id" | "full_name" | "department" | "avatar_url"> | null })[];
 }
 
 export async function fetchPost(id: string) {
   const { data, error } = await supabase
     .from("collaboration_posts")
-    .select("*, owner:profiles!collaboration_posts_owner_id_fkey(*)")
+    .select("*, owner:profiles!collaboration_posts_owner_profile_fkey(*)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data as (Post & { owner: Profile }) | null;
+  return data as unknown as (Post & { owner: Profile }) | null;
 }
 
 export async function fetchMyPosts(userId: string) {
@@ -76,17 +76,17 @@ export async function fetchMyApplications(userId: string) {
     .eq("applicant_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as (Application & { post: Post })[];
+  return (data ?? []) as unknown as (Application & { post: Post })[];
 }
 
 export async function fetchApplicationsForPost(postId: string) {
   const { data, error } = await supabase
     .from("applications")
-    .select("*, applicant:profiles!applications_applicant_id_fkey(*)")
+    .select("*, applicant:profiles!applications_applicant_profile_fkey(*)")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as (Application & { applicant: Profile })[];
+  return (data ?? []) as unknown as (Application & { applicant: Profile })[];
 }
 
 export async function fetchMyApplicationForPost(postId: string, userId: string) {
