@@ -14,13 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applicant_id: string
+          created_at: string
+          id: string
+          message: string
+          post_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          created_at?: string
+          id?: string
+          message?: string
+          post_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          post_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collaboration_posts: {
+        Row: {
+          category: string
+          created_at: string
+          deadline: string | null
+          description: string
+          id: string
+          owner_id: string
+          project_type: string | null
+          required_skills: string[]
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          owner_id: string
+          project_type?: string | null
+          required_skills?: string[]
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          owner_id?: string
+          project_type?: string | null
+          required_skills?: string[]
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          contact_email: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          department: string | null
+          email: string
+          full_name: string
+          id: string
+          skills: string[]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          full_name?: string
+          id: string
+          skills?: string[]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          skills?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_post_owner: {
+        Args: { _post_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
