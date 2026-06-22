@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthenticatedMyPostsRouteImport } from './routes/_authenticated/my-posts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPostsNewRouteImport } from './routes/_authenticated/posts.new'
 import { Route as AuthenticatedPostsPostIdRouteImport } from './routes/_authenticated/posts.$postId'
@@ -42,6 +43,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedMyPostsRoute = AuthenticatedMyPostsRouteImport.update({
+  id: '/my-posts',
+  path: '/my-posts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-posts': typeof AuthenticatedMyPostsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/posts/$postId': typeof AuthenticatedPostsPostIdRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-posts': typeof AuthenticatedMyPostsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/posts/$postId': typeof AuthenticatedPostsPostIdRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/my-posts': typeof AuthenticatedMyPostsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/posts/$postId': typeof AuthenticatedPostsPostIdRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/my-posts'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/posts/$postId'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/my-posts'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/posts/$postId'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/my-posts'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/_authenticated/posts/$postId'
@@ -162,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/my-posts': {
+      id: '/_authenticated/my-posts'
+      path: '/my-posts'
+      fullPath: '/my-posts'
+      preLoaderRoute: typeof AuthenticatedMyPostsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -188,12 +207,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMyPostsRoute: typeof AuthenticatedMyPostsRoute
   AuthenticatedPostsPostIdRoute: typeof AuthenticatedPostsPostIdRoute
   AuthenticatedPostsNewRoute: typeof AuthenticatedPostsNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMyPostsRoute: AuthenticatedMyPostsRoute,
   AuthenticatedPostsPostIdRoute: AuthenticatedPostsPostIdRoute,
   AuthenticatedPostsNewRoute: AuthenticatedPostsNewRoute,
 }
