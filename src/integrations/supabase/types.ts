@@ -44,6 +44,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "applications_applicant_profile_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "applications_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
@@ -92,7 +99,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_posts_owner_profile_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
