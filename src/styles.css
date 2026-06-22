@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@source inline("bg-coral bg-sage bg-amber bg-coral/10 bg-sage/10 bg-amber/10 text-coral text-sage text-amber border-coral border-sage border-amber hover:border-coral hover:border-sage hover:border-amber");
 
 @custom-variant dark (&:is(.dark *));
 
