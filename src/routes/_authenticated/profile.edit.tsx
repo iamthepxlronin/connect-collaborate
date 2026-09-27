@@ -2,15 +2,33 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProfile, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { DEPARTMENTS } from "@/lib/stucollab-constants";
+import { DEPARTMENTS, MAX_PROFILE_SKILLS } from "@/lib/stucollab-constants";
+import { SkillsCombobox } from "@/components/skills-combobox";
 
 export const Route = createFileRoute("/_authenticated/profile/edit")({
   head: () => ({ meta: [{ title: "My profile — StuCollab" }] }),
   component: EditProfile,
+});
+
+const profileSchema = z.object({
+  full_name: z
+    .string()
+    .trim()
+    .min(2, "Enter your full name")
+    .max(80, "Name must be under 80 characters")
+    .regex(/^[a-zA-Z][a-zA-Z'’\-. ]*$/, "Name can only contain letters, spaces, hyphens and apostrophes"),
+  department: z.string().min(1, "Select your department"),
+  bio: z.string().trim().max(400, "Bio must be under 400 characters"),
+  contact_email: z.string().trim().max(255).email("Enter a valid email address").or(z.literal("")),
+  contact_whatsapp: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9][0-9\s-]{7,17}$/, "Enter a valid phone number, e.g. +2348012345678")
+    .or(z.literal("")),
 });
 
 function EditProfile() {
@@ -23,7 +41,7 @@ function EditProfile() {
   });
 
   const [form, setForm] = useState<Partial<Profile>>({});
-  const [skillInput, setSkillInput] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -32,13 +50,31 @@ function EditProfile() {
 
   async function save() {
     if (!user) return;
+    const parsed = profileSchema.safeParse({
+      full_name: form.full_name ?? "",
+      department: form.department ?? "",
+      bio: form.bio ?? "",
+      contact_email: form.contact_email ?? "",
+      contact_whatsapp: form.contact_whatsapp ?? "",
+    });
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      for (const i of parsed.error.issues) errs[String(i.path[0])] = i.message;
+      setErrors(errs);
+      return toast.error(parsed.error.issues[0].message);
+    }
+    if (!parsed.data.contact_email && !parsed.data.contact_whatsapp) {
+      setErrors({ contact_whatsapp: "Add at least one way for accepted teammates to reach you" });
+      return toast.error("Add an email or WhatsApp number so teammates can reach you");
+    }
+    setErrors({});
     setSaving(true);
     const { error } = await supabase.from("profiles").update({
-      full_name: form.full_name,
-      department: form.department,
-      bio: form.bio,
-      contact_email: form.contact_email,
-      contact_whatsapp: form.contact_whatsapp,
+      full_name: parsed.data.full_name,
+      department: parsed.data.department,
+      bio: parsed.data.bio || null,
+      contact_email: parsed.data.contact_email || null,
+      contact_whatsapp: parsed.data.contact_whatsapp || null,
       skills: form.skills ?? [],
     }).eq("id", user.id);
     setSaving(false);
@@ -47,15 +83,8 @@ function EditProfile() {
     qc.invalidateQueries({ queryKey: ["profile", user.id] });
   }
 
-  function addSkill(s: string) {
-    const t = s.trim();
-    const cur = form.skills ?? [];
-    if (!t || cur.includes(t)) return;
-    setForm({ ...form, skills: [...cur, t] });
-    setSkillInput("");
-  }
-
   if (isLoading || !profile) return <div className="p-10 text-muted">Loading…</div>;
+
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
