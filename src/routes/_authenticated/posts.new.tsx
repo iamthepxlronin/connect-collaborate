@@ -1,43 +1,74 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES } from "@/lib/stucollab-constants";
+import { CATEGORIES, MAX_POST_SKILLS } from "@/lib/stucollab-constants";
+import { SkillsCombobox } from "@/components/skills-combobox";
 
 export const Route = createFileRoute("/_authenticated/posts/new")({
   head: () => ({ meta: [{ title: "New project — StuCollab" }] }),
   component: NewPost,
 });
 
+const postSchema = z.object({
+  title: z.string().trim().min(8, "Title should be at least 8 characters").max(120, "Title must be under 120 characters"),
+  description: z.string().trim().min(30, "Describe your project in at least 30 characters").max(2000, "Description must be under 2000 characters"),
+  category: z.string().min(1, "Choose a category"),
+  project_type: z.string().trim().max(60, "Project type must be under 60 characters"),
+  deadline: z.string(),
+});
+
 function NewPost() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: "", description: "", category: "", project_type: "", deadline: "" });
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-
-  function addSkill(s: string) {
-    const t = s.trim();
-    if (!t || skills.includes(t)) return;
-    setSkills([...skills, t]);
-    setSkillInput("");
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const parsed = postSchema.safeParse(form);
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      for (const i of parsed.error.issues) errs[String(i.path[0])] = i.message;
+      setErrors(errs);
+      return toast.error(parsed.error.issues[0].message);
+    }
+    if (skills.length === 0) {
+      setErrors({ skills: "Add at least one required skill" });
+      return toast.error("Add at least one required skill");
+    }
+    if (form.deadline && new Date(form.deadline) < new Date(new Date().toDateString())) {
+      setErrors({ deadline: "Deadline cannot be in the past" });
+      return toast.error("Deadline cannot be in the past");
+    }
+    setErrors({});
     setLoading(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) { setLoading(false); return; }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("contact_whatsapp, contact_email")
+      .eq("id", u.user.id)
+      .maybeSingle();
+    if (!profile?.contact_whatsapp && !profile?.contact_email) {
+      setLoading(false);
+      toast.error("Add a contact detail to your profile first so accepted teammates can reach you");
+      return navigate({ to: "/profile/edit" });
+    }
+
+    const v = parsed.data;
     const { data, error } = await supabase
       .from("collaboration_posts")
       .insert({
         owner_id: u.user.id,
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        project_type: form.project_type || null,
-        deadline: form.deadline || null,
+        title: v.title,
+        description: v.description,
+        category: v.category,
+        project_type: v.project_type || null,
+        deadline: v.deadline || null,
         required_skills: skills,
       })
       .select("id")
@@ -47,6 +78,7 @@ function NewPost() {
     toast.success("Project posted");
     navigate({ to: "/posts/$postId", params: { postId: data.id } });
   }
+
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
