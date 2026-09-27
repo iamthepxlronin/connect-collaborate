@@ -91,45 +91,31 @@ function EditProfile() {
       <h1 className="font-serif text-4xl font-black mb-2">My <em className="italic text-coral">profile</em></h1>
       <p className="text-muted mb-8">Tell collaborators about yourself. Contact details are revealed only to people you accept.</p>
       <div className="bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm space-y-5">
-        <Field label="Full name">
-          <input className={inputCls} value={form.full_name ?? ""} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+        <Field label="Full name" error={errors.full_name}>
+          <input maxLength={80} className={inputCls} value={form.full_name ?? ""} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
         </Field>
-        <Field label="Department">
+        <Field label="Department" error={errors.department}>
           <select className={inputCls} value={form.department ?? ""} onChange={(e) => setForm({ ...form, department: e.target.value })}>
             <option value="">Select…</option>
             {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </Field>
-        <Field label="Bio">
-          <textarea rows={3} className={inputCls} value={form.bio ?? ""} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="A short intro about you." />
+        <Field label="Bio" error={errors.bio} hint={`${(form.bio ?? "").length}/400`}>
+          <textarea rows={3} maxLength={400} className={inputCls} value={form.bio ?? ""} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="A short intro about you." />
         </Field>
-        <Field label="Skills">
-          <div className="space-y-2">
-            <input
-              className={inputCls}
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(skillInput); } }}
-              placeholder="Type a skill and press Enter"
-            />
-            <div className="flex flex-wrap gap-2">
-              {(form.skills ?? []).map((s) => (
-                <span key={s} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-cream border border-edge font-medium">
-                  {s}
-                  <button type="button" onClick={() => setForm({ ...form, skills: (form.skills ?? []).filter((x) => x !== s) })} className="text-muted hover:text-coral">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        </Field>
+        <SkillsCombobox
+          label="Skills"
+          value={form.skills ?? []}
+          onChange={(skills) => setForm({ ...form, skills })}
+          max={MAX_PROFILE_SKILLS}
+          placeholder="Search skills e.g. React, Academic Writing…"
+        />
         <div className="grid sm:grid-cols-2 gap-5">
-          <Field label="Contact email (shown when accepted)">
-            <input type="email" className={inputCls} value={form.contact_email ?? ""} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
+          <Field label="Contact email (shown when accepted)" error={errors.contact_email}>
+            <input type="email" maxLength={255} className={inputCls} value={form.contact_email ?? ""} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
           </Field>
-          <Field label="WhatsApp (optional)">
-            <input className={inputCls} value={form.contact_whatsapp ?? ""} onChange={(e) => setForm({ ...form, contact_whatsapp: e.target.value })} placeholder="e.g. +234..." />
+          <Field label="WhatsApp number" error={errors.contact_whatsapp}>
+            <input maxLength={20} className={inputCls} value={form.contact_whatsapp ?? ""} onChange={(e) => setForm({ ...form, contact_whatsapp: e.target.value })} placeholder="e.g. +2348012345678" />
           </Field>
         </div>
         <button onClick={save} disabled={saving} className="w-full font-semibold text-white bg-coral px-6 py-3.5 rounded-full hover:-translate-y-0.5 shadow-[0_4px_20px_rgba(232,93,58,0.3)] transition disabled:opacity-60">
@@ -140,13 +126,18 @@ function EditProfile() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, error, hint }: { label: string; children: React.ReactNode; error?: string; hint?: string }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-muted mb-2">{label}</label>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-semibold text-muted">{label}</label>
+        {hint && <span className="text-xs text-muted">{hint}</span>}
+      </div>
       {children}
+      {error && <p className="text-xs text-coral mt-1.5">{error}</p>}
     </div>
   );
 }
+
 
 const inputCls = "w-full px-4 py-3 border-2 border-edge rounded-2xl bg-white focus:outline-none focus:border-coral transition";
