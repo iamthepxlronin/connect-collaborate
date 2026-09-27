@@ -120,45 +120,93 @@ function LoginForm() {
   );
 }
 
-function SignupForm() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ fullName: "", email: "", password: "", department: "" });
+const signupSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(2, "Enter your full name")
+    .max(80, "Name must be under 80 characters")
+    .regex(/^[a-zA-Z][a-zA-Z'’\-. ]*$/, "Name can only contain letters, spaces, hyphens and apostrophes"),
+  email: z.string().trim().min(1, "Enter your email").max(255, "Email is too long").email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(72, "Password must be under 72 characters")
+    .regex(/[a-zA-Z]/, "Password must include a letter")
+    .regex(/[0-9]/, "Password must include a number"),
+  confirmPassword: z.string(),
+  department: z.string().min(1, "Select your department"),
+}).refine((v) => v.password === v.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+function SignupForm({ onSignedUp }: { onSignedUp: (email: string) => void }) {
+  const [form, setForm] = useState({ fullName: "", email: "", password: "", confirmPassword: "", department: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   function upd<K extends keyof typeof form>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
+    setErrors((e) => ({ ...e, [k]: "" }));
   }
+
+  const strength = passwordStrength(form.password);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (form.password.length < 6) return toast.error("Password must be at least 6 characters");
+    const parsed = signupSchema.safeParse(form);
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      for (const i of parsed.error.issues) errs[String(i.path[0])] = i.message;
+      setErrors(errs);
+      return toast.error(parsed.error.issues[0].message);
+    }
+    setErrors({});
     setLoading(true);
+    const v = parsed.data;
     const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
+      email: v.email.toLowerCase(),
+      password: v.password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: form.fullName, department: form.department },
+        data: { full_name: v.fullName, department: v.department },
       },
     });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+    // Send the new student back to the sign-in tab so they log in with their new details.
+    await supabase.auth.signOut();
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created — welcome!");
-    navigate({ to: "/dashboard" });
+    toast.success("Account created — please sign in with your new details");
+    onSignedUp(v.email.toLowerCase());
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Full name">
-        <input required value={form.fullName} onChange={(e) => upd("fullName", e.target.value)} placeholder="Your full name" className={inputCls} />
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <Field label="Full name" error={errors.fullName}>
+        <input required maxLength={80} value={form.fullName} onChange={(e) => upd("fullName", e.target.value)} autoComplete="name" placeholder="Your full name" className={inputCls} />
       </Field>
-      <Field label="Email address">
-        <input type="email" required value={form.email} onChange={(e) => upd("email", e.target.value)} placeholder="you@email.com" className={inputCls} />
+      <Field label="Email address" error={errors.email}>
+        <input type="email" required maxLength={255} value={form.email} onChange={(e) => upd("email", e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
       </Field>
-      <Field label="Password">
-        <input type="password" required value={form.password} onChange={(e) => upd("password", e.target.value)} placeholder="At least 6 characters" className={inputCls} />
+      <Field label="Password" error={errors.password}>
+        <input type="password" required maxLength={72} value={form.password} onChange={(e) => upd("password", e.target.value)} autoComplete="new-password" placeholder="At least 8 characters, with a number" className={inputCls} />
+        {form.password && (
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-1.5 flex-1 rounded-full bg-cream overflow-hidden">
+              <div className={`h-full transition-all ${strength.barClass}`} style={{ width: `${strength.pct}%` }} />
+            </div>
+            <span className="text-[11px] font-semibold text-muted">{strength.label}</span>
+          </div>
+        )}
       </Field>
-      <Field label="Department">
+      <Field label="Confirm password" error={errors.confirmPassword}>
+        <input type="password" required maxLength={72} value={form.confirmPassword} onChange={(e) => upd("confirmPassword", e.target.value)} autoComplete="new-password" placeholder="Re-enter your password" className={inputCls} />
+      </Field>
+      <Field label="Department" error={errors.department}>
         <select required value={form.department} onChange={(e) => upd("department", e.target.value)} className={inputCls}>
           <option value="">Select your department</option>
           {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -170,6 +218,19 @@ function SignupForm() {
     </form>
   );
 }
+
+function passwordStrength(pw: string) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (score <= 2) return { pct: 33, label: "Weak", barClass: "bg-coral" };
+  if (score === 3) return { pct: 66, label: "Okay", barClass: "bg-amber" };
+  return { pct: 100, label: "Strong", barClass: "bg-sage" };
+}
+
 
 function GoogleButton() {
   const [loading, setLoading] = useState(false);
