@@ -74,7 +74,7 @@ function AuthPage() {
             </button>
           </div>
 
-          {tab === "login" ? <LoginForm /> : <SignupForm />}
+          {tab === "login" ? <LoginForm initialEmail={prefillEmail} /> : <SignupForm onSignedUp={handleSignedUp} />}
 
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-edge" />
