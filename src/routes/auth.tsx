@@ -21,6 +21,7 @@ function AuthPage() {
   const { mode } = Route.useSearch();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">(mode);
+  const [prefillEmail, setPrefillEmail] = useState("");
 
   useEffect(() => setTab(mode), [mode]);
 
@@ -29,6 +30,13 @@ function AuthPage() {
       if (data.user) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
+
+  function handleSignedUp(email: string) {
+    setPrefillEmail(email);
+    setTab("login");
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+  }
+
 
   return (
     <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-4 py-12 relative overflow-hidden">
@@ -66,7 +74,7 @@ function AuthPage() {
             </button>
           </div>
 
-          {tab === "login" ? <LoginForm /> : <SignupForm />}
+          {tab === "login" ? <LoginForm initialEmail={prefillEmail} /> : <SignupForm onSignedUp={handleSignedUp} />}
 
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-edge" />
@@ -86,26 +94,42 @@ function AuthPage() {
   );
 }
 
-function LoginForm() {
+
+function LoginForm({ initialEmail = "" }: { initialEmail?: string }) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+  }, [initialEmail]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!z.string().email().safeParse(trimmed).success) {
+      setError("Enter a valid email address");
+      return toast.error("Enter a valid email address");
+    }
+    if (!password) {
+      setError("Enter your password");
+      return toast.error("Enter your password");
+    }
+    setError("");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({ email: trimmed, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (err) return toast.error(err.message);
     toast.success("Signed in");
     navigate({ to: "/dashboard" });
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Email address">
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <Field label="Email address" error={error}>
+        <input type="email" required maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
       </Field>
       <Field label="Password">
         <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" className={inputCls} />
@@ -113,6 +137,7 @@ function LoginForm() {
       <div className="flex justify-end">
         <Link to="/auth/forgot-password" className="text-xs text-coral hover:underline font-medium">Forgot password?</Link>
       </div>
+
       <button type="submit" disabled={loading} className={primaryBtn}>
         {loading ? "Signing in…" : "Sign in to your account"}
       </button>
@@ -254,14 +279,16 @@ function GoogleButton() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-muted mb-2">{label}</label>
       {children}
+      {error && <p className="text-xs text-coral mt-1.5">{error}</p>}
     </div>
   );
 }
+
 
 const inputCls = "w-full px-4 py-3 border-2 border-edge rounded-2xl bg-white focus:outline-none focus:border-coral transition";
 const primaryBtn = "w-full font-semibold text-white bg-coral px-6 py-3.5 rounded-full shadow-[0_4px_20px_rgba(232,93,58,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,93,58,0.4)] transition-all disabled:opacity-60 disabled:hover:translate-y-0";
