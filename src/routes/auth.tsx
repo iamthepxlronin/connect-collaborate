@@ -279,14 +279,16 @@ function GoogleButton() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-muted mb-2">{label}</label>
       {children}
+      {error && <p className="text-xs text-coral mt-1.5">{error}</p>}
     </div>
   );
 }
+
 
 const inputCls = "w-full px-4 py-3 border-2 border-edge rounded-2xl bg-white focus:outline-none focus:border-coral transition";
 const primaryBtn = "w-full font-semibold text-white bg-coral px-6 py-3.5 rounded-full shadow-[0_4px_20px_rgba(232,93,58,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,93,58,0.4)] transition-all disabled:opacity-60 disabled:hover:translate-y-0";
