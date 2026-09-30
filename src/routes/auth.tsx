@@ -100,20 +100,41 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+function LoginForm({ initialEmail = "" }: { initialEmail?: string }) {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+  }, [initialEmail]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!z.string().email().safeParse(trimmed).success) {
+      setError("Enter a valid email address");
+      return toast.error("Enter a valid email address");
+    }
+    if (!password) {
+      setError("Enter your password");
+      return toast.error("Enter your password");
+    }
+    setError("");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: err } = await supabase.auth.signInWithPassword({ email: trimmed, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (err) return toast.error(err.message);
     toast.success("Signed in");
     navigate({ to: "/dashboard" });
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Email address">
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <Field label="Email address" error={error}>
+        <input type="email" required maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
       </Field>
       <Field label="Password">
         <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" className={inputCls} />
@@ -121,6 +142,7 @@ function LoginForm() {
       <div className="flex justify-end">
         <Link to="/auth/forgot-password" className="text-xs text-coral hover:underline font-medium">Forgot password?</Link>
       </div>
+
       <button type="submit" disabled={loading} className={primaryBtn}>
         {loading ? "Signing in…" : "Sign in to your account"}
       </button>
