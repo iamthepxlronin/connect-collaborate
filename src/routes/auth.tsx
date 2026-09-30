@@ -94,11 +94,6 @@ function AuthPage() {
   );
 }
 
-function LoginForm() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
 function LoginForm({ initialEmail = "" }: { initialEmail?: string }) {
   const navigate = useNavigate();
