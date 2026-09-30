@@ -21,6 +21,7 @@ function AuthPage() {
   const { mode } = Route.useSearch();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">(mode);
+  const [prefillEmail, setPrefillEmail] = useState("");
 
   useEffect(() => setTab(mode), [mode]);
 
@@ -29,6 +30,13 @@ function AuthPage() {
       if (data.user) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
+
+  function handleSignedUp(email: string) {
+    setPrefillEmail(email);
+    setTab("login");
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+  }
+
 
   return (
     <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-4 py-12 relative overflow-hidden">
