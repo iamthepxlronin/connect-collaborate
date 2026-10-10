@@ -1,0 +1,1 @@
+CREATE POLICY "Authenticated can view accepted team members" ON public.applications FOR SELECT TO authenticated USING (status = 'accepted');
