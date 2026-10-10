@@ -89,6 +89,17 @@ export async function fetchApplicationsForPost(postId: string) {
   return (data ?? []) as unknown as (Application & { applicant: Profile })[];
 }
 
+export async function fetchAcceptedTeam(postId: string) {
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id, created_at, applicant:profiles!applications_applicant_profile_fkey(*)")
+    .eq("post_id", postId)
+    .eq("status", "accepted")
+    .order("updated_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as { id: string; created_at: string; applicant: Profile }[];
+}
+
 export async function fetchMyApplicationForPost(postId: string, userId: string) {
   const { data, error } = await supabase
     .from("applications")

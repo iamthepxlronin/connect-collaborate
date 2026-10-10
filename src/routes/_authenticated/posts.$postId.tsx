@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, MessageCircle, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost } from "@/lib/stucollab-api";
+import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 
 export const Route = createFileRoute("/_authenticated/posts/$postId")({
@@ -34,6 +34,12 @@ function PostDetail() {
     enabled: isOwner,
   });
 
+  const { data: team = [] } = useQuery({
+    queryKey: ["team", postId],
+    queryFn: () => fetchAcceptedTeam(postId),
+  });
+  const canSeeContacts = isOwner || accepted;
+
   const [message, setMessage] = useState("");
   const [applying, setApplying] = useState(false);
 
@@ -56,6 +62,7 @@ function PostDetail() {
     if (error) return toast.error(error.message);
     toast.success(`Application ${status}`);
     qc.invalidateQueries({ queryKey: ["apps", postId] });
+    qc.invalidateQueries({ queryKey: ["team", postId] });
   }
 
   async function closePost() {
@@ -129,6 +136,29 @@ function PostDetail() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-8 bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
+          <h2 className="font-serif text-2xl font-bold flex items-center gap-2">
+            <Users className="w-5 h-5 text-sage" /> Confirmed team
+          </h2>
+          <span className="text-sm text-muted">
+            {team.length + 1} {team.length + 1 === 1 ? "member" : "members"}
+          </span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {post.owner && <MemberCard profile={post.owner} lead showContact={canSeeContacts && !isOwner} />}
+          {team.map((m) => (
+            <MemberCard key={m.id} profile={m.applicant} showContact={canSeeContacts && m.applicant.id !== user?.id} />
+          ))}
+        </div>
+        {team.length === 0 && (
+          <p className="text-sm text-muted mt-4">No collaborators confirmed yet — be the first to join.</p>
+        )}
+        {!canSeeContacts && team.length > 0 && (
+          <p className="text-xs text-muted mt-4">Contact details are only visible to confirmed team members.</p>
+        )}
       </div>
 
       {isOwner && (
@@ -208,6 +238,49 @@ function PostDetail() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function MemberCard({ profile, lead, showContact }: { profile: Profile; lead?: boolean; showContact: boolean }) {
+  const initials = profile.full_name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?";
+  return (
+    <div className="border-2 border-edge rounded-2xl p-4 flex gap-3">
+      <div className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center font-bold text-sm ${lead ? "bg-coral/15 text-coral" : "bg-sage/15 text-sage"}`}>
+        {initials}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-semibold truncate">{profile.full_name}</p>
+          {lead && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-coral bg-coral/10 px-2 py-0.5 rounded-full">
+              <Crown className="w-3 h-3" /> Lead
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted truncate">{profile.department ?? "—"}</p>
+        {profile.skills.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {profile.skills.slice(0, 4).map((s) => (
+              <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-cream border border-edge">{s}</span>
+            ))}
+          </div>
+        )}
+        {showContact && (profile.contact_email || profile.contact_whatsapp) && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {profile.contact_whatsapp && (
+              <a href={`https://wa.me/${profile.contact_whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-sage bg-sage/10 px-2.5 py-1 rounded-full hover:bg-sage/20 transition">
+                <MessageCircle className="w-3 h-3" /> WhatsApp
+              </a>
+            )}
+            {profile.contact_email && (
+              <a href={`mailto:${profile.contact_email}`} className="inline-flex items-center gap-1 text-xs font-semibold text-ink bg-cream px-2.5 py-1 rounded-full hover:bg-edge transition">
+                <Mail className="w-3 h-3" /> Email
+              </a>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
