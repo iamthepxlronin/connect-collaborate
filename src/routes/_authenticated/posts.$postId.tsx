@@ -133,23 +133,59 @@ function PostDetail() {
             <p className="font-semibold">{post.owner?.full_name}</p>
             {post.owner?.department && <p className="text-sm text-muted">{post.owner.department}</p>}
           </div>
-          {accepted && post.owner && (post.owner.contact_email || post.owner.contact_whatsapp) && (
-            <div className="bg-sage/10 border-2 border-sage/40 rounded-2xl p-4 text-sm space-y-1.5">
-              <p className="font-semibold text-sage mb-1">You're in! Contact details:</p>
-              {post.owner.contact_email && (
-                <a href={`mailto:${post.owner.contact_email}`} className="flex items-center gap-2 hover:underline">
-                  <Mail className="w-4 h-4" /> {post.owner.contact_email}
+          <button onClick={shareToWhatsApp} className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-full border-2 border-sage/50 text-sage font-semibold hover:bg-sage/10 transition">
+            <Share2 className="w-4 h-4" /> Share to WhatsApp
+          </button>
+        </div>
+
+        {accepted && post.owner && (
+          <div className="mt-6 bg-sage/10 border-2 border-sage/40 rounded-2xl p-5">
+            <p className="font-serif text-xl font-bold text-sage mb-1">You're in! 🎉</p>
+            <p className="text-sm text-ink/80 mb-4">{firstName(post.owner.full_name)} accepted you. Introduce yourself now while the team is active.</p>
+            <div className="flex flex-wrap gap-2">
+              {post.owner.contact_whatsapp && (
+                <a
+                  href={waLink(post.owner.contact_whatsapp, `Hey ${firstName(post.owner.full_name)}! 👋 Thanks for accepting me to "${post.title}" on StuCollab. Excited to get started — when can we talk?`)}
+                  target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-sage text-white font-semibold hover:opacity-90 transition"
+                >
+                  <MessageCircle className="w-4 h-4" /> Chat with team lead on WhatsApp
                 </a>
               )}
-              {post.owner.contact_whatsapp && (
-                <a href={`https://wa.me/${post.owner.contact_whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:underline">
-                  <MessageCircle className="w-4 h-4" /> {post.owner.contact_whatsapp}
+              {post.owner.contact_email && (
+                <a href={`mailto:${post.owner.contact_email}`} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-edge bg-white font-semibold hover:bg-cream transition">
+                  <Mail className="w-4 h-4" /> Email
                 </a>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      {justAccepted && (
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" onClick={() => setJustAccepted(null)}>
+          <div className="bg-white rounded-3xl border-2 border-edge p-6 max-w-sm w-full relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setJustAccepted(null)} className="absolute top-4 right-4 text-muted hover:text-ink" aria-label="Close">
+              <X className="w-5 h-5" />
+            </button>
+            <p className="font-serif text-2xl font-black mb-2">{firstName(justAccepted.full_name)} is on your team! 🚀</p>
+            <p className="text-sm text-muted mb-5">Don't let the momentum die — say hi while they're active.</p>
+            {justAccepted.contact_whatsapp ? (
+              <a
+                href={waLink(justAccepted.contact_whatsapp, `Hey ${firstName(justAccepted.full_name)}! 👋 I just accepted your application for "${post.title}" on StuCollab. Welcome to the team — let's connect!`)}
+                target="_blank" rel="noreferrer"
+                onClick={() => setJustAccepted(null)}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-sage text-white font-semibold hover:opacity-90 transition"
+              >
+                <MessageCircle className="w-4 h-4" /> Say hi on WhatsApp
+              </a>
+            ) : (
+              <p className="text-sm text-muted">They haven't added a WhatsApp number{justAccepted.contact_email ? ` — reach them at ${justAccepted.contact_email}` : ""}.</p>
+            )}
+            <button onClick={() => setJustAccepted(null)} className="w-full mt-2 py-2 text-sm text-muted hover:text-ink">Maybe later</button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
