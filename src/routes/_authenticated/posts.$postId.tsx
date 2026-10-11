@@ -2,10 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown } from "lucide-react";
+import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { waLink, firstName } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/_authenticated/posts/$postId")({
   head: () => ({ meta: [{ title: "Project — StuCollab" }] }),
@@ -42,6 +43,7 @@ function PostDetail() {
 
   const [message, setMessage] = useState("");
   const [applying, setApplying] = useState(false);
+  const [justAccepted, setJustAccepted] = useState<Profile | null>(null);
 
   async function apply() {
     if (!user) return;
@@ -61,8 +63,19 @@ function PostDetail() {
     const { error } = await supabase.from("applications").update({ status }).eq("id", appId);
     if (error) return toast.error(error.message);
     toast.success(`Application ${status}`);
+    if (status === "accepted") {
+      const a = apps.find((x) => x.id === appId);
+      if (a) setJustAccepted(a.applicant);
+    }
     qc.invalidateQueries({ queryKey: ["apps", postId] });
     qc.invalidateQueries({ queryKey: ["team", postId] });
+  }
+
+  function shareToWhatsApp() {
+    if (!post) return;
+    const skills = post.required_skills.slice(0, 4).join(", ");
+    const text = `Hey guys! 👋 I'm building "${post.title}" on StuCollab${skills ? ` and need people with ${skills}` : ""}. Check it out and apply here: ${window.location.origin}/posts/${post.id}`;
+    window.open(waLink(null, text), "_blank", "noopener");
   }
 
   async function closePost() {
