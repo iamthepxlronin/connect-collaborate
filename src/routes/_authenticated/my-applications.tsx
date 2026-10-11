@@ -43,6 +43,9 @@ function MyApps() {
                   "bg-amber/20 text-amber border-amber/40"
                 }`}>{a.status}</span>
               </div>
+              {a.status === "accepted" && (
+                <p className="mt-3 text-sm font-semibold text-sage">🎉 You're in! Tap to chat with the team lead on WhatsApp →</p>
+              )}
             </Link>
           ))}
         </div>
