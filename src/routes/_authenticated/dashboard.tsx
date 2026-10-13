@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, Filter } from "lucide-react";
-import { fetchPosts } from "@/lib/stucollab-api";
+import { fetchPosts, fetchProfile } from "@/lib/stucollab-api";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { skillMatch } from "@/lib/skill-match";
 import { DEPARTMENTS } from "@/lib/stucollab-constants";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -11,11 +13,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const { user } = useCurrentUser();
   const { data: posts = [], isLoading } = useQuery({ queryKey: ["posts"], queryFn: fetchPosts });
+  const { data: me } = useQuery({ queryKey: ["profile", user?.id], queryFn: () => fetchProfile(user!.id), enabled: !!user });
+  const mySkills = me?.skills ?? [];
+  const mySet = useMemo(() => new Set(mySkills.map((s) => s.toLowerCase())), [mySkills]);
   const [search, setSearch] = useState("");
   const [skill, setSkill] = useState("all");
   const [dept, setDept] = useState("all");
-  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const [sort, setSort] = useState<"match" | "newest" | "oldest">("match");
 
   const allSkills = useMemo(() => {
     const s = new Set<string>();
@@ -24,16 +30,21 @@ function Dashboard() {
   }, [posts]);
 
   const filtered = useMemo(() => {
-    let r = posts.filter((p) => p.status === "open");
+    let r = posts
+      .filter((p) => p.status === "open" && p.owner_id !== user?.id)
+      .map((p) => ({ ...p, match: skillMatch(mySkills, p.required_skills) }));
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter((p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
     }
     if (skill !== "all") r = r.filter((p) => p.required_skills.includes(skill));
     if (dept !== "all") r = r.filter((p) => p.owner?.department === dept);
-    r = [...r].sort((a, b) => sort === "newest" ? +new Date(b.created_at) - +new Date(a.created_at) : +new Date(a.created_at) - +new Date(b.created_at));
+    const byDate = (a: { created_at: string }, b: { created_at: string }) => +new Date(b.created_at) - +new Date(a.created_at);
+    r = [...r].sort((a, b) =>
+      sort === "match" ? (b.match ?? -1) - (a.match ?? -1) || byDate(a, b)
+      : sort === "newest" ? byDate(a, b) : -byDate(a, b));
     return r;
-  }, [posts, search, skill, dept, sort]);
+  }, [posts, search, skill, dept, sort, user?.id, mySkills]);
 
   return (
     <div className="relative overflow-hidden min-h-full">
@@ -76,6 +87,7 @@ function Dashboard() {
               <span className="text-sm font-semibold">Filters:</span>
             </div>
             <select value={sort} onChange={(e) => setSort(e.target.value as never)} className={filterCls}>
+              <option value="match">Best match for you</option>
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </select>
@@ -114,9 +126,14 @@ function Dashboard() {
                 </div>
                 <h3 className="font-serif text-2xl font-bold mb-2 leading-snug group-hover:text-coral transition">{post.title}</h3>
                 <p className="text-sm text-muted line-clamp-3 mb-4 flex-1">{post.description}</p>
+                {post.match !== null && post.match > 0 && (
+                  <span className={`self-start mb-3 text-xs font-bold px-2.5 py-1 rounded-full ${post.match >= 70 ? "bg-sage/20 text-sage" : post.match >= 30 ? "bg-amber/20 text-amber" : "bg-cream text-muted"}`}>
+                    {post.match >= 70 ? "🎯" : "⚡"} {post.match}% match
+                  </span>
+                )}
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {post.required_skills.slice(0, 4).map((s) => (
-                    <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-cream border border-edge font-medium">{s}</span>
+                    <span key={s} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${mySet.has(s.toLowerCase()) ? "bg-sage/15 border-sage text-ink" : "bg-cream border-edge"}`}>{s}</span>
                   ))}
                 </div>
                 <div className="pt-4 border-t border-edge text-xs text-muted">
