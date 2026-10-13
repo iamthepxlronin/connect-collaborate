@@ -140,10 +140,27 @@ function PostDetail() {
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-sage bg-sage/10 px-3 py-1 rounded-full">{post.category}</span>
           {post.status === "closed" && <span className="text-xs font-semibold uppercase text-muted bg-cream px-3 py-1 rounded-full">Closed</span>}
+          {post.status === "completed" && <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-amber bg-amber/15 px-3 py-1 rounded-full"><Trophy className="w-3 h-3" /> Shipped</span>}
           <span className="text-xs text-muted">Posted {new Date(post.created_at).toLocaleDateString()}</span>
         </div>
         <h1 className="font-serif text-4xl lg:text-5xl font-black mb-4 leading-tight">{post.title}</h1>
         <p className="text-ink/80 leading-relaxed whitespace-pre-wrap mb-6">{post.description}</p>
+
+        {post.status === "completed" && (
+          <div className="mb-6 bg-amber/10 border-2 border-amber/40 rounded-2xl p-5">
+            <p className="font-serif text-xl font-bold mb-1 flex items-center gap-2"><Trophy className="w-5 h-5 text-amber" /> Shipped on StuCollab</p>
+            {post.completed_at && <p className="text-xs text-muted mb-2">Completed {new Date(post.completed_at).toLocaleDateString()}</p>}
+            {post.outcome_summary && <p className="text-sm text-ink/80 whitespace-pre-wrap mb-4">{post.outcome_summary}</p>}
+            <div className="flex flex-wrap gap-2">
+              {post.github_url && (
+                <a href={post.github_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-full bg-ink text-paper font-semibold hover:opacity-90"><Github className="w-4 h-4" /> View code</a>
+              )}
+              {post.demo_url && (
+                <a href={post.demo_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-full border-2 border-edge bg-white font-semibold hover:bg-cream"><ExternalLink className="w-4 h-4" /> Live demo</a>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
           {post.project_type && <Meta icon={Tag} label="Project type" value={post.project_type} />}
@@ -221,6 +238,32 @@ function PostDetail() {
         </div>
       )}
 
+      {shipOpen && (
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" onClick={() => setShipOpen(false)}>
+          <form onSubmit={shipProject} className="bg-white rounded-3xl border-2 border-edge p-6 max-w-md w-full relative space-y-4" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setShipOpen(false)} className="absolute top-4 right-4 text-muted hover:text-ink" aria-label="Close"><X className="w-5 h-5" /></button>
+            <div>
+              <p className="font-serif text-2xl font-black">Ship it 🏆</p>
+              <p className="text-sm text-muted">Show what your team built. It'll appear in the showcase and the project closes to new applicants.</p>
+            </div>
+            <label className="block">
+              <span className="text-sm font-semibold">What did you deliver?</span>
+              <textarea rows={4} maxLength={500} value={shipForm.outcome_summary} onChange={(e) => setShipForm({ ...shipForm, outcome_summary: e.target.value })} placeholder="e.g. Built an offline hostel booking app with PHP & MySQL in 4 weeks." className="mt-1 w-full px-4 py-3 border-2 border-edge rounded-2xl focus:outline-none focus:border-coral" />
+              <span className="text-xs text-muted">{shipForm.outcome_summary.trim().length}/500 · min 20</span>
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold">GitHub repo (optional)</span>
+              <input type="url" value={shipForm.github_url} onChange={(e) => setShipForm({ ...shipForm, github_url: e.target.value })} placeholder="https://github.com/…" className="mt-1 w-full px-4 py-2.5 border-2 border-edge rounded-2xl focus:outline-none focus:border-coral" />
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold">Live demo or Figma link (optional)</span>
+              <input type="url" value={shipForm.demo_url} onChange={(e) => setShipForm({ ...shipForm, demo_url: e.target.value })} placeholder="https://…" className="mt-1 w-full px-4 py-2.5 border-2 border-edge rounded-2xl focus:outline-none focus:border-coral" />
+            </label>
+            <button type="submit" disabled={shipping} className="w-full py-3 rounded-full bg-coral text-white font-semibold hover:opacity-90 disabled:opacity-60">{shipping ? "Shipping…" : "Mark as shipped"}</button>
+          </form>
+        </div>
+      )}
+
       <div className="mt-8 bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
           <h2 className="font-serif text-2xl font-bold flex items-center gap-2">
@@ -248,7 +291,12 @@ function PostDetail() {
         <div className="mt-8 bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <h2 className="font-serif text-2xl font-bold">Applications ({apps.length})</h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              {post.status !== "completed" && (
+                <button onClick={() => setShipOpen(true)} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-full bg-amber text-ink font-semibold hover:opacity-90 transition">
+                  <Trophy className="w-4 h-4" /> Mark as shipped
+                </button>
+              )}
               {post.status === "open" && (
                 <button onClick={closePost} className="px-4 py-2 text-sm rounded-full border-2 border-edge hover:bg-cream font-semibold transition">
                   Close project
