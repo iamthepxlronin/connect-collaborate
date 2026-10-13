@@ -62,10 +62,14 @@ export type Database = {
       collaboration_posts: {
         Row: {
           category: string
+          completed_at: string | null
           created_at: string
           deadline: string | null
+          demo_url: string | null
           description: string
+          github_url: string | null
           id: string
+          outcome_summary: string | null
           owner_id: string
           project_type: string | null
           required_skills: string[]
@@ -75,10 +79,14 @@ export type Database = {
         }
         Insert: {
           category: string
+          completed_at?: string | null
           created_at?: string
           deadline?: string | null
+          demo_url?: string | null
           description: string
+          github_url?: string | null
           id?: string
+          outcome_summary?: string | null
           owner_id: string
           project_type?: string | null
           required_skills?: string[]
@@ -88,10 +96,14 @@ export type Database = {
         }
         Update: {
           category?: string
+          completed_at?: string | null
           created_at?: string
           deadline?: string | null
+          demo_url?: string | null
           description?: string
+          github_url?: string | null
           id?: string
+          outcome_summary?: string | null
           owner_id?: string
           project_type?: string | null
           required_skills?: string[]
