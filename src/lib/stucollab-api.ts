@@ -9,8 +9,12 @@ export type Post = {
   required_skills: string[];
   project_type: string | null;
   deadline: string | null;
-  status: "open" | "closed";
+  status: "open" | "closed" | "completed";
   created_at: string;
+  github_url: string | null;
+  demo_url: string | null;
+  outcome_summary: string | null;
+  completed_at: string | null;
 };
 
 export type Profile = {
