@@ -2,11 +2,19 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X } from "lucide-react";
+import { z } from "zod";
+import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X, Trophy, Github, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { waLink, firstName } from "@/lib/whatsapp";
+
+const optionalUrl = z.string().trim().max(300).refine((v) => v === "" || /^https?:\/\/\S+\.\S+/.test(v), "Links must start with http:// or https://");
+const shipSchema = z.object({
+  outcome_summary: z.string().trim().min(20, "Summary must be at least 20 characters").max(500, "Summary must be under 500 characters"),
+  github_url: optionalUrl,
+  demo_url: optionalUrl,
+});
 
 export const Route = createFileRoute("/_authenticated/posts/$postId")({
   head: () => ({ meta: [{ title: "Project — StuCollab" }] }),
@@ -44,6 +52,9 @@ function PostDetail() {
   const [message, setMessage] = useState("");
   const [applying, setApplying] = useState(false);
   const [justAccepted, setJustAccepted] = useState<Profile | null>(null);
+  const [shipOpen, setShipOpen] = useState(false);
+  const [shipping, setShipping] = useState(false);
+  const [shipForm, setShipForm] = useState({ outcome_summary: "", github_url: "", demo_url: "" });
 
   async function apply() {
     if (!user) return;
@@ -83,6 +94,29 @@ function PostDetail() {
     if (error) return toast.error(error.message);
     toast.success("Project closed");
     qc.invalidateQueries({ queryKey: ["post", postId] });
+  }
+
+  async function shipProject(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = shipSchema.safeParse(shipForm);
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    setShipping(true);
+    const { error } = await supabase
+      .from("collaboration_posts")
+      .update({
+        status: "completed",
+        outcome_summary: parsed.data.outcome_summary,
+        github_url: parsed.data.github_url || null,
+        demo_url: parsed.data.demo_url || null,
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", postId);
+    setShipping(false);
+    if (error) return toast.error(error.message);
+    toast.success("Shipped! 🏆 Your project is now in the showcase.");
+    setShipOpen(false);
+    qc.invalidateQueries({ queryKey: ["post", postId] });
+    qc.invalidateQueries({ queryKey: ["posts"] });
   }
 
   async function deletePost() {
