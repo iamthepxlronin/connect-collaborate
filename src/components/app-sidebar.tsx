@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, FolderPlus, FileText, Inbox, UserCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderPlus, FileText, Inbox, UserCircle, LogOut , Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const items = [
   { title: "Browse projects", url: "/dashboard", icon: LayoutDashboard },
   { title: "New project", url: "/posts/new", icon: FolderPlus },
   { title: "My projects", url: "/my-posts", icon: FileText },
+  { title: "Shipped showcase", url: "/showcase", icon: Trophy },
   { title: "My applications", url: "/my-applications", icon: Inbox },
   { title: "My profile", url: "/profile/edit", icon: UserCircle },
 ] as const;

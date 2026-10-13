@@ -41,7 +41,7 @@ function MyPosts() {
             <Link key={p.id} to="/posts/$postId" params={{ postId: p.id }} className="bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-lg transition">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-sage">{p.category}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${p.status === "open" ? "bg-sage/15 text-sage" : "bg-cream text-muted"}`}>{p.status}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${p.status === "open" ? "bg-sage/15 text-sage" : p.status === "completed" ? "bg-amber/15 text-amber" : "bg-cream text-muted"}`}>{p.status}</span>
               </div>
               <h3 className="font-serif text-xl font-bold mb-2">{p.title}</h3>
               <p className="text-sm text-muted line-clamp-2">{p.description}</p>

@@ -8,6 +8,13 @@
       "when": 1791634903980,
       "tag": "0000_team_roster_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791897360786,
+      "tag": "0001_project_completion",
+      "breakpoints": true
     }
   ]
 }
