@@ -114,3 +114,16 @@ export async function fetchMyApplicationForPost(postId: string, userId: string) 
   if (error) throw error;
   return data as Application | null;
 }
+export async function fetchSavedIds(userId: string) {
+  const { data, error } = await supabase.from("saved_posts").select("post_id").eq("user_id", userId);
+  if (error) throw error;
+  return (data ?? []).map((r) => r.post_id as string);
+}
+
+export async function setSaved(userId: string, postId: string, saved: boolean) {
+  const q = saved
+    ? supabase.from("saved_posts").insert({ user_id: userId, post_id: postId })
+    : supabase.from("saved_posts").delete().eq("user_id", userId).eq("post_id", postId);
+  const { error } = await q;
+  if (error) throw error;
+}
