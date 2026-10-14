@@ -19,6 +19,7 @@ import { Route as AuthenticatedMyPostsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyApplicationsRouteImport } from './routes/_authenticated/my-applications'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenticated/profile.edit'
+import { Route as AuthenticatedProfileUserIdRouteImport } from './routes/_authenticated/profile.$userId'
 import { Route as AuthenticatedPostsNewRouteImport } from './routes/_authenticated/posts.new'
 import { Route as AuthenticatedPostsPostIdRouteImport } from './routes/_authenticated/posts.$postId'
 
@@ -73,6 +74,12 @@ const AuthenticatedProfileEditRoute =
     path: '/profile/edit',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfileUserIdRoute =
+  AuthenticatedProfileUserIdRouteImport.update({
+    id: '/profile/$userId',
+    path: '/profile/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPostsNewRoute = AuthenticatedPostsNewRouteImport.update({
   id: '/posts/new',
   path: '/posts/new',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/posts/$postId': typeof AuthenticatedPostsPostIdRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
+  '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +117,7 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/posts/$postId': typeof AuthenticatedPostsPostIdRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
+  '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRoutesById {
@@ -124,6 +133,7 @@ export interface FileRoutesById {
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/posts/$postId': typeof AuthenticatedPostsPostIdRoute
   '/_authenticated/posts/new': typeof AuthenticatedPostsNewRoute
+  '/_authenticated/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRouteTypes {
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/posts/$postId'
     | '/posts/new'
+    | '/profile/$userId'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/posts/$postId'
     | '/posts/new'
+    | '/profile/$userId'
     | '/profile/edit'
   id:
     | '__root__'
@@ -166,6 +178,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/_authenticated/posts/$postId'
     | '/_authenticated/posts/new'
+    | '/_authenticated/profile/$userId'
     | '/_authenticated/profile/edit'
   fileRoutesById: FileRoutesById
 }
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileEditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/$userId': {
+      id: '/_authenticated/profile/$userId'
+      path: '/profile/$userId'
+      fullPath: '/profile/$userId'
+      preLoaderRoute: typeof AuthenticatedProfileUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/posts/new': {
       id: '/_authenticated/posts/new'
       path: '/posts/new'
@@ -271,6 +291,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedShowcaseRoute: typeof AuthenticatedShowcaseRoute
   AuthenticatedPostsPostIdRoute: typeof AuthenticatedPostsPostIdRoute
   AuthenticatedPostsNewRoute: typeof AuthenticatedPostsNewRoute
+  AuthenticatedProfileUserIdRoute: typeof AuthenticatedProfileUserIdRoute
   AuthenticatedProfileEditRoute: typeof AuthenticatedProfileEditRoute
 }
 
@@ -281,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShowcaseRoute: AuthenticatedShowcaseRoute,
   AuthenticatedPostsPostIdRoute: AuthenticatedPostsPostIdRoute,
   AuthenticatedPostsNewRoute: AuthenticatedPostsNewRoute,
+  AuthenticatedProfileUserIdRoute: AuthenticatedProfileUserIdRoute,
   AuthenticatedProfileEditRoute: AuthenticatedProfileEditRoute,
 }
 
