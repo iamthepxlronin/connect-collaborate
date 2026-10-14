@@ -181,7 +181,7 @@ function PostDetail() {
         <div className="border-t border-edge pt-6 flex items-center justify-between flex-wrap gap-4">
           <div>
             <p className="text-sm text-muted mb-1">Posted by</p>
-            <p className="font-semibold">{post.owner?.full_name}</p>
+            <Link to="/profile/$userId" params={{ userId: post.owner_id }} className="font-semibold hover:text-coral transition">{post.owner?.full_name}</Link>
             {post.owner?.department && <p className="text-sm text-muted">{post.owner.department}</p>}
           </div>
           <button onClick={shareToWhatsApp} className="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-full border-2 border-sage/50 text-sage font-semibold hover:bg-sage/10 transition">
@@ -315,7 +315,7 @@ function PostDetail() {
                 <div key={a.id} className="border-2 border-edge rounded-2xl p-5">
                   <div className="flex items-start justify-between gap-3 flex-wrap mb-2">
                     <div>
-                      <p className="font-semibold">{a.applicant.full_name}</p>
+                      <Link to="/profile/$userId" params={{ userId: a.applicant.id }} className="font-semibold hover:text-coral transition">{a.applicant.full_name}</Link>
                       <p className="text-xs text-muted">{a.applicant.department ?? "—"} · {new Date(a.created_at).toLocaleDateString()}</p>
                     </div>
                     <StatusBadge status={a.status} />
@@ -382,7 +382,7 @@ function MemberCard({ profile, lead, showContact }: { profile: Profile; lead?: b
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold truncate">{profile.full_name}</p>
+          <Link to="/profile/$userId" params={{ userId: profile.id }} className="font-semibold truncate hover:text-coral transition">{profile.full_name}</Link>
           {lead && (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-coral bg-coral/10 px-2 py-0.5 rounded-full">
               <Crown className="w-3 h-3" /> Lead

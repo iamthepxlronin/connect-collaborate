@@ -51,7 +51,7 @@ function Showcase() {
                 {p.title}
               </Link>
               <p className="text-sm text-ink/80 line-clamp-3 mb-3 flex-1">{p.outcome_summary ?? p.description}</p>
-              <p className="text-xs text-muted mb-4">Led by {p.owner?.full_name ?? "—"}</p>
+              <p className="text-xs text-muted mb-4">Led by {p.owner ? <Link to="/profile/$userId" params={{ userId: p.owner.id }} className="font-semibold text-ink hover:text-coral">{p.owner.full_name}</Link> : "—"}</p>
               <div className="flex flex-wrap gap-2">
                 {p.github_url && (
                   <a href={p.github_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full bg-ink text-paper hover:opacity-90">
