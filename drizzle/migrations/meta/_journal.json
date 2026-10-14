@@ -15,6 +15,13 @@
       "when": 1791897360786,
       "tag": "0001_project_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791986585537,
+      "tag": "0002_saved_posts",
+      "breakpoints": true
     }
   ]
 }
