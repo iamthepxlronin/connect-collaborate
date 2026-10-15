@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { PasswordInput } from "@/components/password-input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { DEPARTMENTS } from "@/lib/stucollab-constants";
@@ -132,7 +133,7 @@ function LoginForm({ initialEmail = "" }: { initialEmail?: string }) {
         <input type="email" required maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
       </Field>
       <Field label="Password">
-        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" className={inputCls} />
+        <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" className={inputCls} />
       </Field>
       <div className="flex justify-end">
         <Link to="/auth/forgot-password" className="text-xs text-coral hover:underline font-medium">Forgot password?</Link>
@@ -218,7 +219,7 @@ function SignupForm({ onSignedUp }: { onSignedUp: (email: string) => void }) {
         <input type="email" required maxLength={255} value={form.email} onChange={(e) => upd("email", e.target.value)} autoComplete="email" placeholder="you@email.com" className={inputCls} />
       </Field>
       <Field label="Password" error={errors.password}>
-        <input type="password" required maxLength={72} value={form.password} onChange={(e) => upd("password", e.target.value)} autoComplete="new-password" placeholder="At least 8 characters, with a number" className={inputCls} />
+        <PasswordInput required maxLength={72} value={form.password} onChange={(e) => upd("password", e.target.value)} autoComplete="new-password" placeholder="At least 8 characters, with a number" className={inputCls} />
         {form.password && (
           <div className="mt-2 flex items-center gap-2">
             <div className="h-1.5 flex-1 rounded-full bg-cream overflow-hidden">
@@ -229,7 +230,7 @@ function SignupForm({ onSignedUp }: { onSignedUp: (email: string) => void }) {
         )}
       </Field>
       <Field label="Confirm password" error={errors.confirmPassword}>
-        <input type="password" required maxLength={72} value={form.confirmPassword} onChange={(e) => upd("confirmPassword", e.target.value)} autoComplete="new-password" placeholder="Re-enter your password" className={inputCls} />
+        <PasswordInput required maxLength={72} value={form.confirmPassword} onChange={(e) => upd("confirmPassword", e.target.value)} autoComplete="new-password" placeholder="Re-enter your password" className={inputCls} />
       </Field>
       <Field label="Department" error={errors.department}>
         <select required value={form.department} onChange={(e) => upd("department", e.target.value)} className={inputCls}>
