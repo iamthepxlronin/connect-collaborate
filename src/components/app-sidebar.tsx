@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, FolderPlus, FileText, Inbox, UserCircle, LogOut , Trophy, Bookmark } from "lucide-react";
+import { LayoutDashboard, FolderPlus, FileText, Inbox, UserCircle, LogOut , Trophy, Bookmark, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const items = [
   { title: "Browse projects", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Activity", url: "/activity", icon: Bell },
   { title: "New project", url: "/posts/new", icon: FolderPlus },
   { title: "My projects", url: "/my-posts", icon: FileText },
   { title: "Saved projects", url: "/saved", icon: Bookmark },
