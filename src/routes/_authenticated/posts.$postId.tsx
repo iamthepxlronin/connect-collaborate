@@ -1,3 +1,5 @@
+import { SaveButton } from "@/components/save-button";
+import { DeadlineBadge } from "@/components/deadline-badge";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -143,7 +145,8 @@ function PostDetail() {
           {post.status === "completed" && <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-amber bg-amber/15 px-3 py-1 rounded-full"><Trophy className="w-3 h-3" /> Shipped</span>}
           <span className="text-xs text-muted">Posted {new Date(post.created_at).toLocaleDateString()}</span>
         </div>
-        <h1 className="font-serif text-4xl lg:text-5xl font-black mb-4 leading-tight">{post.title}</h1>
+        <div className="flex items-start justify-between gap-3 mb-4"><h1 className="font-serif text-4xl lg:text-5xl font-black leading-tight">{post.title}</h1><SaveButton postId={post.id} className="shrink-0 mt-2" /></div>
+        <DeadlineBadge deadline={post.status === "open" ? post.deadline : null} />
         <p className="text-ink/80 leading-relaxed whitespace-pre-wrap mb-6">{post.description}</p>
 
         {post.status === "completed" && (
