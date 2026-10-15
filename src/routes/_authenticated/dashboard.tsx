@@ -6,6 +6,8 @@ import { fetchPosts, fetchProfile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { skillMatch } from "@/lib/skill-match";
 import { DEPARTMENTS } from "@/lib/stucollab-constants";
+import { SaveButton } from "@/components/save-button";
+import { DeadlineBadge } from "@/components/deadline-badge";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Browse projects — StuCollab" }] }),
@@ -122,7 +124,7 @@ function Dashboard() {
               <Link key={post.id} to="/posts/$postId" params={{ postId: post.id }} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold uppercase tracking-wider text-sage">{post.category}</span>
-                  <span className="text-xs text-muted">{new Date(post.created_at).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-2"><DeadlineBadge deadline={post.deadline} /><SaveButton postId={post.id} /></div>
                 </div>
                 <h3 className="font-serif text-2xl font-bold mb-2 leading-snug group-hover:text-coral transition">{post.title}</h3>
                 <p className="text-sm text-muted line-clamp-3 mb-4 flex-1">{post.description}</p>
