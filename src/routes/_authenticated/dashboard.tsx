@@ -47,6 +47,7 @@ function Dashboard() {
       : sort === "newest" ? byDate(a, b) : -byDate(a, b));
     return r;
   }, [posts, search, skill, dept, sort, user?.id, mySkills]);
+  const hasFilters = !!search.trim() || skill !== "all" || dept !== "all";
 
   return (
     <div className="relative overflow-hidden min-h-full">
@@ -54,55 +55,55 @@ function Dashboard() {
       <div className="absolute bottom-32 right-24 w-[420px] h-[420px] rounded-full bg-amber blur-[80px] opacity-20 pointer-events-none" />
       <div className="absolute bottom-0 -left-20 w-[320px] h-[320px] rounded-full bg-coral blur-[80px] opacity-20 pointer-events-none" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="mb-10 grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <h1 className="font-serif text-5xl font-black mb-4 leading-tight">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        <div className="mb-6 sm:mb-10 grid grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+          <div className="lg:col-span-2 min-w-0">
+            <h1 className="font-serif text-3xl sm:text-5xl font-black mb-2 sm:mb-4 leading-tight">
               Explore <em className="italic text-coral">projects</em>
             </h1>
-            <p className="text-lg text-muted max-w-2xl">
+            <p className="text-sm sm:text-lg text-muted max-w-2xl">
               Find the perfect project to collaborate on and connect with talented teammates.
             </p>
           </div>
-          <div className="flex items-start justify-start lg:justify-end gap-3">
-            <div className="bg-white border-2 border-edge rounded-2xl px-6 py-4 shadow-sm">
-              <p className="text-sm text-muted mb-1">Open projects</p>
-              <p className="font-serif text-3xl font-black text-ink">{filtered.length}</p>
+          <div className="flex items-start justify-end shrink-0">
+            <div className="bg-white border-2 border-edge rounded-2xl px-4 py-3 sm:px-6 sm:py-4 shadow-sm">
+              <p className="text-xs sm:text-sm text-muted mb-1">Open</p>
+              <p className="font-serif text-2xl sm:text-3xl font-black text-ink">{isLoading ? "–" : filtered.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-lg border-2 border-edge p-6 lg:p-8 mb-8">
-          <div className="relative mb-6">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
+        <div className="bg-white rounded-3xl shadow-lg border-2 border-edge p-4 sm:p-6 lg:p-8 mb-8">
+          <div className="relative mb-4 sm:mb-6">
+            <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search projects by title or description..."
-              className="w-full pl-14 pr-5 py-4 border-2 border-edge bg-cream/30 rounded-2xl focus:outline-none focus:border-coral focus:bg-white transition-all"
+              placeholder="Search projects..."
+              className="w-full pl-12 sm:pl-14 pr-5 py-3 sm:py-4 border-2 border-edge bg-cream/30 rounded-2xl focus:outline-none focus:border-coral focus:bg-white transition-all"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 mr-2">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-2 mr-2">
               <Filter className="w-4 h-4 text-muted" />
               <span className="text-sm font-semibold">Filters:</span>
             </div>
-            <select value={sort} onChange={(e) => setSort(e.target.value as never)} className={filterCls}>
+            <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as never)} className={filterCls}>
               <option value="match">Best match for you</option>
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </select>
-            <select value={skill} onChange={(e) => setSkill(e.target.value)} className={filterCls}>
+            <select aria-label="Skill" value={skill} onChange={(e) => setSkill(e.target.value)} className={filterCls}>
               <option value="all">All skills</option>
               {allSkills.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
-            <select value={dept} onChange={(e) => setDept(e.target.value)} className={filterCls}>
+            <select aria-label="Department" value={dept} onChange={(e) => setDept(e.target.value)} className={filterCls}>
               <option value="all">All departments</option>
               {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            {(search || skill !== "all" || dept !== "all") && (
-              <button onClick={() => { setSearch(""); setSkill("all"); setDept("all"); }} className="ml-auto px-4 py-1.5 text-sm text-coral hover:bg-cream rounded-xl font-semibold transition">
+            {hasFilters && (
+              <button onClick={() => { setSearch(""); setSkill("all"); setDept("all"); }} className="sm:ml-auto px-4 py-2 text-sm text-coral hover:bg-cream rounded-xl font-semibold transition">
                 Clear all
               </button>
             )}
@@ -110,16 +111,31 @@ function Dashboard() {
         </div>
 
         {isLoading ? (
-          <p className="text-center text-muted py-12">Loading projects…</p>
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-3xl p-6 border-2 border-edge animate-pulse">
+                <div className="h-3 w-24 bg-cream rounded mb-4" />
+                <div className="h-6 w-3/4 bg-cream rounded mb-3" />
+                <div className="h-3 w-full bg-cream rounded mb-2" />
+                <div className="h-3 w-5/6 bg-cream rounded mb-6" />
+                <div className="flex gap-2"><div className="h-6 w-16 bg-cream rounded-full" /><div className="h-6 w-20 bg-cream rounded-full" /></div>
+              </div>
+            ))}
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center bg-white border-2 border-dashed border-edge rounded-3xl py-16 px-6">
-            <p className="text-muted mb-4">No projects match your filters.</p>
-            <Link to="/posts/new" className="inline-flex font-semibold text-white bg-coral px-5 py-2.5 rounded-full hover:-translate-y-0.5 transition">
-              Be the first to post →
-            </Link>
+          <div className="text-center bg-white border-2 border-dashed border-edge rounded-3xl py-12 sm:py-16 px-6">
+            <p className="font-serif text-xl font-bold mb-2">{hasFilters ? "Nothing matches those filters" : "No open projects yet"}</p>
+            <p className="text-muted mb-5 text-sm">{hasFilters ? "Try a different skill or clear your filters." : "Start one and invite classmates to join you."}</p>
+            {hasFilters ? (
+              <button onClick={() => { setSearch(""); setSkill("all"); setDept("all"); }} className="inline-flex font-semibold text-coral border-2 border-coral px-5 py-2.5 rounded-full transition">Clear filters</button>
+            ) : (
+              <Link to="/posts/new" className="inline-flex font-semibold text-white bg-coral px-5 py-2.5 rounded-full hover:-translate-y-0.5 transition">
+                Post a project →
+              </Link>
+            )}
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filtered.map((post) => (
               <Link key={post.id} to="/posts/$postId" params={{ postId: post.id }} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col">
                 <div className="flex items-center justify-between mb-3">
@@ -151,4 +167,4 @@ function Dashboard() {
   );
 }
 
-const filterCls = "px-4 py-1.5 border-2 border-edge rounded-xl text-sm bg-white hover:bg-cream transition shadow-sm font-medium";
+const filterCls = "w-full sm:w-auto px-4 py-2.5 sm:py-1.5 border-2 border-edge rounded-xl text-sm bg-white hover:bg-cream transition shadow-sm font-medium";

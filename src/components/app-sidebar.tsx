@@ -11,8 +11,10 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 const items = [
   { title: "Browse projects", url: "/dashboard", icon: LayoutDashboard },
@@ -29,6 +31,8 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { setOpenMobile } = useSidebar();
+  useEffect(() => { setOpenMobile(false); }, [pathname, setOpenMobile]);
 
   async function signOut() {
     await qc.cancelQueries();
