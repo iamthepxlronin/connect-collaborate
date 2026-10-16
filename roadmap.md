@@ -13,4 +13,4 @@
 ## Next
 - Email notifications on application status change.
 
-- Full signed-in polish & test pass (mobile, empty states) before portfolio showcase.
+- Polish pass done: Browse mobile layout, loading placeholders, empty states, phone menu closes on tap.
