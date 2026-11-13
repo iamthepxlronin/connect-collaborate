@@ -14,3 +14,8 @@
 - Email notifications on application status change.
 
 - Polish pass done: Browse mobile layout, loading placeholders, empty states, phone menu closes on tap.
+
+## In progress
+- Project owner can edit existing project details.
+- Browse skill tags can be clicked to filter projects.
+- Applicants can withdraw their own pending applications.

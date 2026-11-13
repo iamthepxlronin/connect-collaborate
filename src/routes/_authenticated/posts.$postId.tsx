@@ -5,17 +5,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X, Trophy, Github, ExternalLink } from "lucide-react";
+import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X, Trophy, Github, ExternalLink, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { waLink, firstName } from "@/lib/whatsapp";
+import { CATEGORIES, MAX_POST_SKILLS } from "@/lib/stucollab-constants";
+import { SkillsCombobox } from "@/components/skills-combobox";
 
 const optionalUrl = z.string().trim().max(300).refine((v) => v === "" || /^https?:\/\/\S+\.\S+/.test(v), "Links must start with http:// or https://");
 const shipSchema = z.object({
   outcome_summary: z.string().trim().min(20, "Summary must be at least 20 characters").max(500, "Summary must be under 500 characters"),
   github_url: optionalUrl,
   demo_url: optionalUrl,
+});
+const editPostSchema = z.object({
+  title: z.string().trim().min(8, "Title should be at least 8 characters").max(120, "Title must be under 120 characters"),
+  description: z.string().trim().min(30, "Describe your project in at least 30 characters").max(2000, "Description must be under 2000 characters"),
+  category: z.enum(CATEGORIES),
+  project_type: z.string().trim().max(60, "Project type must be under 60 characters"),
+  deadline: z.string(),
+  required_skills: z.array(z.string()).min(1, "Add at least one required skill").max(MAX_POST_SKILLS, `Choose up to ${MAX_POST_SKILLS} skills`),
 });
 
 export const Route = createFileRoute("/_authenticated/posts/$postId")({
@@ -57,6 +67,9 @@ function PostDetail() {
   const [shipOpen, setShipOpen] = useState(false);
   const [shipping, setShipping] = useState(false);
   const [shipForm, setShipForm] = useState({ outcome_summary: "", github_url: "", demo_url: "" });
+  const [editOpen, setEditOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", description: "", category: "", project_type: "", deadline: "", required_skills: [] as string[] });
 
   async function apply() {
     if (!user) return;
@@ -119,6 +132,53 @@ function PostDetail() {
     setShipOpen(false);
     qc.invalidateQueries({ queryKey: ["post", postId] });
     qc.invalidateQueries({ queryKey: ["posts"] });
+  }
+
+  function openEdit() {
+    if (!post || !isOwner || post.status === "completed") return;
+    setEditForm({
+      title: post.title,
+      description: post.description,
+      category: post.category,
+      project_type: post.project_type ?? "",
+      deadline: post.deadline ?? "",
+      required_skills: [...post.required_skills],
+    });
+    setEditOpen(true);
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || !isOwner || post.status === "completed") return;
+    const parsed = editPostSchema.safeParse(editForm);
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (parsed.data.deadline && new Date(`${parsed.data.deadline}T00:00:00`) < new Date(new Date().toDateString())) {
+      return toast.error("Deadline cannot be in the past");
+    }
+    setSavingEdit(true);
+    const { data, error } = await supabase
+      .from("collaboration_posts")
+      .update({
+        title: parsed.data.title,
+        description: parsed.data.description,
+        category: parsed.data.category,
+        project_type: parsed.data.project_type || null,
+        deadline: parsed.data.deadline || null,
+        required_skills: parsed.data.required_skills,
+      })
+      .eq("id", postId)
+      .eq("owner_id", user.id)
+      .neq("status", "completed")
+      .select("id")
+      .maybeSingle();
+    setSavingEdit(false);
+    if (error || !data) return toast.error(error?.message ?? "This project can no longer be edited");
+    toast.success("Project details updated");
+    setEditOpen(false);
+    qc.invalidateQueries({ queryKey: ["post", postId] });
+    qc.invalidateQueries({ queryKey: ["posts"] });
+    qc.invalidateQueries({ queryKey: ["my-posts"] });
+    qc.invalidateQueries({ queryKey: ["led"] });
   }
 
   async function deletePost() {
@@ -267,6 +327,45 @@ function PostDetail() {
         </div>
       )}
 
+      {editOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-ink/50 p-4" onClick={() => setEditOpen(false)}>
+          <form onSubmit={saveEdit} className="mx-auto my-6 w-full max-w-2xl space-y-4 rounded-3xl border-2 border-edge bg-white p-5 sm:p-7" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl font-black">Edit project</h2>
+                <p className="text-sm text-muted">Update the details students see when they browse.</p>
+              </div>
+              <button type="button" onClick={() => setEditOpen(false)} aria-label="Close edit project" className="rounded-full p-2 text-muted hover:bg-cream hover:text-ink"><X className="h-5 w-5" /></button>
+            </div>
+            <label className="block text-sm font-semibold">Project title
+              <input required maxLength={120} value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="mt-1 w-full rounded-xl border-2 border-edge px-4 py-3 font-normal focus:border-coral focus:outline-none" />
+            </label>
+            <label className="block text-sm font-semibold">Description
+              <textarea required rows={5} maxLength={2000} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="mt-1 w-full rounded-xl border-2 border-edge px-4 py-3 font-normal focus:border-coral focus:outline-none" />
+              <span className="font-normal text-muted">{editForm.description.length}/2000</span>
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-semibold">Category
+                <select required value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="mt-1 w-full rounded-xl border-2 border-edge bg-white px-4 py-3 font-normal focus:border-coral focus:outline-none">
+                  {CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold">Project type (optional)
+                <input maxLength={60} value={editForm.project_type} onChange={(e) => setEditForm({ ...editForm, project_type: e.target.value })} className="mt-1 w-full rounded-xl border-2 border-edge px-4 py-3 font-normal focus:border-coral focus:outline-none" />
+              </label>
+            </div>
+            <label className="block text-sm font-semibold">Deadline (optional)
+              <input type="date" value={editForm.deadline} onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })} className="mt-1 w-full rounded-xl border-2 border-edge px-4 py-3 font-normal focus:border-coral focus:outline-none" />
+            </label>
+            <SkillsCombobox label="Required skills" value={editForm.required_skills} onChange={(required_skills) => setEditForm({ ...editForm, required_skills })} max={MAX_POST_SKILLS} placeholder="Search skills needed for this project…" />
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setEditOpen(false)} className="rounded-full border-2 border-edge px-5 py-2.5 font-semibold hover:bg-cream">Cancel</button>
+              <button type="submit" disabled={savingEdit} className="rounded-full bg-coral px-5 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60">{savingEdit ? "Saving…" : "Save changes"}</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="mt-8 bg-white rounded-3xl border-2 border-edge p-6 lg:p-8 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-5">
           <h2 className="font-serif text-2xl font-bold flex items-center gap-2">
@@ -295,6 +394,11 @@ function PostDetail() {
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <h2 className="font-serif text-2xl font-bold">Applications ({apps.length})</h2>
             <div className="flex gap-2 flex-wrap">
+              {post.status !== "completed" && (
+                <button onClick={openEdit} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-full border-2 border-edge hover:border-coral hover:text-coral font-semibold transition">
+                  <Pencil className="w-4 h-4" /> Edit project
+                </button>
+              )}
               {post.status !== "completed" && (
                 <button onClick={() => setShipOpen(true)} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-full bg-amber text-ink font-semibold hover:opacity-90 transition">
                   <Trophy className="w-4 h-4" /> Mark as shipped
