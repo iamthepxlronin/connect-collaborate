@@ -29,7 +29,14 @@ const editPostSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/posts/$postId")({
-  head: () => ({ meta: [{ title: "Project — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "Student project — StuCollab" },
+    { name: "description", content: "Explore this student collaboration project, its needed skills, and its team." },
+    { property: "og:title", content: "Student project — StuCollab" },
+    { property: "og:description", content: "Explore this student collaboration project, its needed skills, and its team." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PostDetail,
 });
 

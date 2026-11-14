@@ -83,6 +83,19 @@ export async function fetchMyApplications(userId: string) {
   return (data ?? []) as unknown as (Application & { post: Post })[];
 }
 
+export async function withdrawPendingApplication(applicationId: string, applicantId: string) {
+  const { data, error } = await supabase
+    .from("applications")
+    .delete()
+    .eq("id", applicationId)
+    .eq("applicant_id", applicantId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
 export async function fetchApplicationsForPost(postId: string) {
   const { data, error } = await supabase
     .from("applications")

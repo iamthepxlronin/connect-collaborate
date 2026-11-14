@@ -10,7 +10,14 @@ import { DEPARTMENTS, MAX_PROFILE_SKILLS } from "@/lib/stucollab-constants";
 import { SkillsCombobox } from "@/components/skills-combobox";
 
 export const Route = createFileRoute("/_authenticated/profile/edit")({
-  head: () => ({ meta: [{ title: "My profile — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "Edit my profile — StuCollab" },
+    { name: "description", content: "Update your student profile, skills, department, and collaboration contact details." },
+    { property: "og:title", content: "Edit my profile — StuCollab" },
+    { property: "og:description", content: "Update your student profile, skills, department, and collaboration contact details." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: EditProfile,
 });
 

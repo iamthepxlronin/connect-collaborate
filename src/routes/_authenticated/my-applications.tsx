@@ -1,10 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { fetchMyApplications } from "@/lib/stucollab-api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { fetchMyApplications, withdrawPendingApplication } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { canWithdrawApplication } from "@/lib/application-actions";
 
 export const Route = createFileRoute("/_authenticated/my-applications")({
-  head: () => ({ meta: [{ title: "My applications — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "My applications — StuCollab" },
+    { name: "description", content: "Review your student project applications and their current status." },
+    { property: "og:title", content: "My applications — StuCollab" },
+    { property: "og:description", content: "Review your student project applications and their current status." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: MyApps,
 });
 
@@ -14,6 +23,18 @@ function MyApps() {
     queryKey: ["my-apps", user?.id],
     queryFn: () => fetchMyApplications(user!.id),
     enabled: !!user,
+  });
+  const qc = useQueryClient();
+  const withdrawal = useMutation({
+    mutationFn: (applicationId: string) => withdrawPendingApplication(applicationId, user?.id ?? ""),
+    onSuccess: (removed) => {
+      if (!removed) return toast.error("This application is no longer pending");
+      toast.success("Application withdrawn");
+      qc.invalidateQueries({ queryKey: ["my-apps", user?.id] });
+      qc.invalidateQueries({ queryKey: ["activity"] });
+      qc.invalidateQueries({ queryKey: ["my-app"] });
+    },
+    onError: () => toast.error("Couldn't withdraw this application. Please try again."),
   });
 
   return (
@@ -30,11 +51,11 @@ function MyApps() {
       ) : (
         <div className="space-y-4">
           {apps.map((a) => (
-            <Link key={a.id} to="/posts/$postId" params={{ postId: a.post_id }} className="block bg-white rounded-3xl p-5 border-2 border-edge hover:border-coral hover:shadow-lg transition">
-              <div className="flex items-center justify-between flex-wrap gap-3">
+            <article key={a.id} className="bg-white rounded-3xl p-5 border-2 border-edge hover:border-coral hover:shadow-lg transition">
+              <div className="flex items-start justify-between flex-wrap gap-3">
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wider text-sage font-semibold mb-1">{a.post?.category}</p>
-                  <h3 className="font-serif text-xl font-bold truncate">{a.post?.title}</h3>
+                  <h3 className="font-serif text-xl font-bold"><Link to="/posts/$postId" params={{ postId: a.post_id }} className="break-words hover:text-coral">{a.post?.title ?? "Project unavailable"}</Link></h3>
                   <p className="text-xs text-muted mt-1">Applied {new Date(a.created_at).toLocaleDateString()}</p>
                 </div>
                 <span className={`text-xs font-semibold uppercase px-3 py-1 rounded-full border ${
@@ -44,9 +65,24 @@ function MyApps() {
                 }`}>{a.status}</span>
               </div>
               {a.status === "accepted" && (
-                <p className="mt-3 text-sm font-semibold text-sage">🎉 You're in! Tap to chat with the team lead on WhatsApp →</p>
+                <Link to="/posts/$postId" params={{ postId: a.post_id }} className="mt-3 block text-sm font-semibold text-sage">🎉 You're in! Open the project to chat with the team lead →</Link>
               )}
-            </Link>
+              {canWithdrawApplication(a.status) && (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-edge pt-4">
+                  <p className="text-xs text-muted">Changed your mind? You can withdraw while it’s pending.</p>
+                  <button
+                    type="button"
+                    disabled={withdrawal.isPending}
+                    onClick={() => {
+                      if (window.confirm("Withdraw this application? The project owner will no longer see it.")) withdrawal.mutate(a.id);
+                    }}
+                    className="rounded-full border-2 border-edge px-4 py-2 text-sm font-semibold text-coral transition hover:border-coral hover:bg-coral/10 disabled:opacity-50"
+                  >
+                    {withdrawal.isPending ? "Withdrawing…" : "Withdraw application"}
+                  </button>
+                </div>
+              )}
+            </article>
           ))}
         </div>
       )}

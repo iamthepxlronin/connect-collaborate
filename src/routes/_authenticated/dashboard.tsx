@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, Filter } from "lucide-react";
@@ -8,13 +8,22 @@ import { skillMatch } from "@/lib/skill-match";
 import { DEPARTMENTS } from "@/lib/stucollab-constants";
 import { SaveButton } from "@/components/save-button";
 import { DeadlineBadge } from "@/components/deadline-badge";
+import { postRequiresSkill } from "@/lib/application-actions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Browse projects — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "Browse projects — StuCollab" },
+    { name: "description", content: "Discover open student projects by skill, department, and deadline." },
+    { property: "og:title", content: "Browse projects — StuCollab" },
+    { property: "og:description", content: "Discover open student projects by skill, department, and deadline." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Dashboard,
 });
 
 function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { data: posts = [], isLoading } = useQuery({ queryKey: ["posts"], queryFn: fetchPosts });
   const { data: me } = useQuery({ queryKey: ["profile", user?.id], queryFn: () => fetchProfile(user!.id), enabled: !!user });
@@ -39,7 +48,7 @@ function Dashboard() {
       const q = search.toLowerCase();
       r = r.filter((p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
     }
-    if (skill !== "all") r = r.filter((p) => p.required_skills.includes(skill));
+    if (skill !== "all") r = r.filter((p) => postRequiresSkill(p.required_skills, skill));
     if (dept !== "all") r = r.filter((p) => p.owner?.department === dept);
     const byDate = (a: { created_at: string }, b: { created_at: string }) => +new Date(b.created_at) - +new Date(a.created_at);
     r = [...r].sort((a, b) =>
@@ -136,8 +145,8 @@ function Dashboard() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            {filtered.map((post) => (
-              <Link key={post.id} to="/posts/$postId" params={{ postId: post.id }} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col">
+              {filtered.map((post) => (
+              <article key={post.id} onClick={() => navigate({ to: "/posts/$postId", params: { postId: post.id } })} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); navigate({ to: "/posts/$postId", params: { postId: post.id } }); } }} tabIndex={0} aria-label={`View ${post.title}`} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold uppercase tracking-wider text-sage">{post.category}</span>
                   <div className="flex items-center gap-2"><DeadlineBadge deadline={post.deadline} /><SaveButton postId={post.id} /></div>
@@ -149,16 +158,16 @@ function Dashboard() {
                     {post.match >= 70 ? "🎯" : "⚡"} {post.match}% match
                   </span>
                 )}
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-4" aria-label="Filter by required skill">
                   {post.required_skills.slice(0, 4).map((s) => (
-                    <span key={s} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${mySet.has(s.toLowerCase()) ? "bg-sage/15 border-sage text-ink" : "bg-cream border-edge"}`}>{s}</span>
+                    <button key={s} type="button" aria-label={`Filter by ${s}`} aria-pressed={skill.toLowerCase() === s.toLowerCase()} onClick={(e) => { e.stopPropagation(); setSkill(skill.toLowerCase() === s.toLowerCase() ? "all" : s); }} onKeyDown={(e) => e.stopPropagation()} className={`text-xs px-2.5 py-1 rounded-full border font-medium transition hover:border-coral hover:text-coral ${mySet.has(s.toLowerCase()) ? "bg-sage/15 border-sage text-ink" : "bg-cream border-edge"}`}>{s}</button>
                   ))}
                 </div>
                 <div className="pt-4 border-t border-edge text-xs text-muted">
                   by <span className="font-semibold text-ink">{post.owner?.full_name ?? "Unknown"}</span>
                   {post.owner?.department && <> · {post.owner.department}</>}
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         )}

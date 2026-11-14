@@ -5,7 +5,14 @@ import { fetchMyPosts } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 
 export const Route = createFileRoute("/_authenticated/my-posts")({
-  head: () => ({ meta: [{ title: "My projects — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "My projects — StuCollab" },
+    { name: "description", content: "Manage projects you have posted and review their progress." },
+    { property: "og:title", content: "My projects — StuCollab" },
+    { property: "og:description", content: "Manage projects you have posted and review their progress." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: MyPosts,
 });
 

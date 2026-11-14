@@ -5,7 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { DecorativeBg } from "@/components/decorative-bg";
 
 export const Route = createFileRoute("/auth/forgot-password")({
-  head: () => ({ meta: [{ title: "Reset password — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "Reset password — StuCollab" },
+    { name: "description", content: "Request a secure link to reset your StuCollab password." },
+    { property: "og:title", content: "Reset password — StuCollab" },
+    { property: "og:description", content: "Request a secure link to reset your StuCollab password." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ForgotPassword,
 });
 

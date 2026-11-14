@@ -7,7 +7,14 @@ import { CATEGORIES, MAX_POST_SKILLS } from "@/lib/stucollab-constants";
 import { SkillsCombobox } from "@/components/skills-combobox";
 
 export const Route = createFileRoute("/_authenticated/posts/new")({
-  head: () => ({ meta: [{ title: "New project — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "New project — StuCollab" },
+    { name: "description", content: "Share a student project and invite collaborators with the skills you need." },
+    { property: "og:title", content: "Post a new project — StuCollab" },
+    { property: "og:description", content: "Share a student project and invite collaborators with the skills you need." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: NewPost,
 });
 

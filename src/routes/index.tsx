@@ -9,6 +9,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Post your project, browse collaborators by skill, and build the team you actually deserve — all in one place." },
       { property: "og:title", content: "StuCollab — Find your project teammates" },
       { property: "og:description", content: "Post your project, browse collaborators by skill, and build the team you actually deserve." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,

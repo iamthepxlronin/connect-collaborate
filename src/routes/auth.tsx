@@ -14,7 +14,14 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — StuCollab" }] }),
+  head: () => ({ meta: [
+    { title: "Sign in or join — StuCollab" },
+    { name: "description", content: "Sign in to find student collaborators or create your StuCollab account." },
+    { property: "og:title", content: "Sign in or join — StuCollab" },
+    { property: "og:description", content: "Sign in to find student collaborators or create your StuCollab account." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AuthPage,
 });
 
