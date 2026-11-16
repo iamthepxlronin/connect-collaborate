@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, Filter } from "lucide-react";
@@ -23,7 +23,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { data: posts = [], isLoading } = useQuery({ queryKey: ["posts"], queryFn: fetchPosts });
   const { data: me } = useQuery({ queryKey: ["profile", user?.id], queryFn: () => fetchProfile(user!.id), enabled: !!user });
@@ -146,12 +145,12 @@ function Dashboard() {
         ) : (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               {filtered.map((post) => (
-              <article key={post.id} onClick={() => navigate({ to: "/posts/$postId", params: { postId: post.id } })} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); navigate({ to: "/posts/$postId", params: { postId: post.id } }); } }} tabIndex={0} aria-label={`View ${post.title}`} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral">
+              <article key={post.id} className="group bg-white rounded-3xl p-6 border-2 border-edge hover:border-coral hover:shadow-xl transition-all flex flex-col">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-semibold uppercase tracking-wider text-sage">{post.category}</span>
                   <div className="flex items-center gap-2"><DeadlineBadge deadline={post.deadline} /><SaveButton postId={post.id} /></div>
                 </div>
-                <h3 className="font-serif text-2xl font-bold mb-2 leading-snug group-hover:text-coral transition">{post.title}</h3>
+                <h3 className="font-serif text-2xl font-bold mb-2 leading-snug"><Link to="/posts/$postId" params={{ postId: post.id }} className="hover:text-coral transition">{post.title}</Link></h3>
                 <p className="text-sm text-muted line-clamp-3 mb-4 flex-1">{post.description}</p>
                 {post.match !== null && post.match > 0 && (
                   <span className={`self-start mb-3 text-xs font-bold px-2.5 py-1 rounded-full ${post.match >= 70 ? "bg-sage/20 text-sage" : post.match >= 30 ? "bg-amber/20 text-amber" : "bg-cream text-muted"}`}>

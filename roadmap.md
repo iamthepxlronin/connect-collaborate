@@ -9,13 +9,8 @@
 - Team roster, WhatsApp links, skill match %, showcase, public profiles.
 - Saved projects + deadline warnings.
 - Activity feed (new applications + decisions, "New" since last visit).
+- Polish pass: Browse mobile layout, loading feedback, empty states, phone menu closes on tap.
+- Project owners can edit details; Browse skill tags filter results; applicants can withdraw their own pending applications.
 
 ## Next
 - Email notifications on application status change.
-
-- Polish pass done: Browse mobile layout, loading placeholders, empty states, phone menu closes on tap.
-
-## In progress
-- Project owner can edit existing project details.
-- Browse skill tags can be clicked to filter projects.
-- Applicants can withdraw their own pending applications.
