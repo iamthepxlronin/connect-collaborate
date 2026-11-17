@@ -99,6 +99,13 @@
       "when": 1794910115056,
       "tag": "0013_reduce_contact_lookup_privileges",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794910264041,
+      "tag": "0014_allow_authorized_contact_lookup",
+      "breakpoints": true
     }
   ]
 }

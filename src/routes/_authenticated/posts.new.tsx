@@ -55,11 +55,15 @@ function NewPost() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) { setLoading(false); return; }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("contact_whatsapp, contact_email")
-      .eq("id", u.user.id)
-      .maybeSingle();
+    const { data: contacts, error: contactsError } = await supabase.rpc("get_own_profile_contacts", {
+      _profile_id: u.user.id,
+    });
+    if (contactsError) {
+      setLoading(false);
+      toast.error("Couldn't check your contact details. Please try again.");
+      return;
+    }
+    const profile = contacts?.[0];
     if (!profile?.contact_whatsapp && !profile?.contact_email) {
       setLoading(false);
       toast.error("Add a contact detail to your profile first so accepted teammates can reach you");
