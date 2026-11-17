@@ -194,6 +194,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_profile: {
+        Args: { _profile_id: string; _viewer_id: string }
+        Returns: boolean
+      }
+      can_view_project: {
+        Args: { _post_id: string; _viewer_id: string }
+        Returns: boolean
+      }
+      get_own_profile_contacts: {
+        Args: { _profile_id: string }
+        Returns: {
+          contact_email: string
+          contact_whatsapp: string
+        }[]
+      }
+      get_profile_contacts: {
+        Args: { _post_id: string; _profile_id: string }
+        Returns: {
+          contact_email: string
+          contact_whatsapp: string
+        }[]
+      }
       is_post_owner: {
         Args: { _post_id: string; _user_id: string }
         Returns: boolean

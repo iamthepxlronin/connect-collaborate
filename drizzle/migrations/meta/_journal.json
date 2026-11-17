@@ -29,6 +29,76 @@
       "when": 1794811905073,
       "tag": "0003_project_edit_and_application_withdrawal_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794909636977,
+      "tag": "0004_restrict_public_project_and_profile_reads",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794909690623,
+      "tag": "0005_scope_profile_visibility_and_contact_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794909780606,
+      "tag": "0006_preserve_applicant_access_to_closed_projects",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794909818477,
+      "tag": "0007_allow_relevant_closed_project_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794909874292,
+      "tag": "0008_retain_closed_project_owner_profile_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794909944429,
+      "tag": "0009_add_owner_only_profile_contact_lookup",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794910030980,
+      "tag": "0010_use_invoker_rights_for_profile_visibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794910039097,
+      "tag": "0011_limit_profile_contacts_to_accepted_teams",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794910106093,
+      "tag": "0012_secure_project_visibility_without_rls_recursion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794910115056,
+      "tag": "0013_reduce_contact_lookup_privileges",
+      "breakpoints": true
     }
   ]
 }

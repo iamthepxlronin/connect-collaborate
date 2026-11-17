@@ -47,14 +47,25 @@ export async function fetchPosts() {
   return (data ?? []) as unknown as (Post & { owner: Pick<Profile, "id" | "full_name" | "department" | "avatar_url"> | null })[];
 }
 
+export async function fetchProfileContacts(postId: string, profileId: string) {
+  const { data, error } = await supabase.rpc("get_profile_contacts", {
+    _post_id: postId,
+    _profile_id: profileId,
+  });
+  if (error) throw error;
+  return data?.[0] ?? { contact_email: null, contact_whatsapp: null };
+}
+
 export async function fetchPost(id: string) {
   const { data, error } = await supabase
     .from("collaboration_posts")
-    .select("*, owner:profiles!collaboration_posts_owner_profile_fkey(*)")
+    .select("*, owner:profiles!collaboration_posts_owner_profile_fkey(id, full_name, department, bio, avatar_url, skills)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data as unknown as (Post & { owner: Profile }) | null;
+  if (!data) return null;
+  const contacts = await fetchProfileContacts(id, data.owner_id);
+  return { ...data, owner: data.owner ? { ...data.owner, ...contacts } : null } as unknown as (Post & { owner: Profile }) | null;
 }
 
 export async function fetchMyPosts(userId: string) {
@@ -68,9 +79,25 @@ export async function fetchMyPosts(userId: string) {
 }
 
 export async function fetchProfile(id: string) {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, department, bio, avatar_url, skills")
+    .eq("id", id)
+    .maybeSingle();
   if (error) throw error;
-  return data as Profile | null;
+  if (!data) return null;
+  const { data: authData } = await supabase.auth.getUser();
+  const { data: ownContacts, error: contactsError } = authData.user?.id === id
+    ? await supabase.rpc("get_own_profile_contacts", { _profile_id: id })
+    : { data: null, error: null };
+  if (contactsError) throw contactsError;
+  const contacts = ownContacts?.[0];
+  return {
+    ...data,
+    email: "",
+    contact_email: contacts?.contact_email ?? null,
+    contact_whatsapp: contacts?.contact_whatsapp ?? null,
+  } as Profile;
 }
 
 export async function fetchMyApplications(userId: string) {
@@ -99,22 +126,30 @@ export async function withdrawPendingApplication(applicationId: string, applican
 export async function fetchApplicationsForPost(postId: string) {
   const { data, error } = await supabase
     .from("applications")
-    .select("*, applicant:profiles!applications_applicant_profile_fkey(*)")
+    .select("*, applicant:profiles!applications_applicant_profile_fkey(id, full_name, department, bio, avatar_url, skills)")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as (Application & { applicant: Profile })[];
+  return (data ?? []).map((application) => ({
+    ...application,
+    applicant: application.applicant ? { ...application.applicant, email: "", contact_email: null, contact_whatsapp: null } : null,
+  })) as unknown as (Application & { applicant: Profile })[];
 }
 
 export async function fetchAcceptedTeam(postId: string) {
   const { data, error } = await supabase
     .from("applications")
-    .select("id, created_at, applicant:profiles!applications_applicant_profile_fkey(*)")
+    .select("id, created_at, applicant:profiles!applications_applicant_profile_fkey(id, full_name, department, bio, avatar_url, skills)")
     .eq("post_id", postId)
     .eq("status", "accepted")
     .order("updated_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as unknown as { id: string; created_at: string; applicant: Profile }[];
+  const members = await Promise.all((data ?? []).map(async (member) => {
+    if (!member.applicant) return { ...member, applicant: null };
+    const contacts = await fetchProfileContacts(postId, member.applicant.id);
+    return { ...member, applicant: { ...member.applicant, email: "", ...contacts } };
+  }));
+  return members as unknown as { id: string; created_at: string; applicant: Profile }[];
 }
 
 export async function fetchMyApplicationForPost(postId: string, userId: string) {

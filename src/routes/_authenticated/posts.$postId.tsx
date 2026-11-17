@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, Mail, MessageCircle, Calendar, Tag, Users, Crown, Share2, X, Trophy, Github, ExternalLink, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, type Profile } from "@/lib/stucollab-api";
+import { fetchPost, fetchApplicationsForPost, fetchMyApplicationForPost, fetchAcceptedTeam, fetchProfileContacts, type Profile } from "@/lib/stucollab-api";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { waLink, firstName } from "@/lib/whatsapp";
 import { CATEGORIES, MAX_POST_SKILLS } from "@/lib/stucollab-constants";
@@ -98,7 +98,15 @@ function PostDetail() {
     toast.success(`Application ${status}`);
     if (status === "accepted") {
       const a = apps.find((x) => x.id === appId);
-      if (a) setJustAccepted(a.applicant);
+      if (a) {
+        try {
+          const contacts = await fetchProfileContacts(postId, a.applicant.id);
+          setJustAccepted({ ...a.applicant, ...contacts });
+        } catch {
+          setJustAccepted(a.applicant);
+          toast.error("Accepted, but their contact details could not be loaded yet.");
+        }
+      }
     }
     qc.invalidateQueries({ queryKey: ["apps", postId] });
     qc.invalidateQueries({ queryKey: ["team", postId] });
