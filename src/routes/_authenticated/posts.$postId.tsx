@@ -159,7 +159,7 @@ function PostDetail() {
     if (!user || !isOwner || post.status === "completed") return;
     const parsed = editPostSchema.safeParse(editForm);
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
-    if (parsed.data.deadline && new Date(`${parsed.data.deadline}T00:00:00`) < new Date(new Date().toDateString())) {
+    if (parsed.data.deadline && parsed.data.deadline !== (post.deadline ?? "") && new Date(`${parsed.data.deadline}T00:00:00`) < new Date(new Date().toDateString())) {
       return toast.error("Deadline cannot be in the past");
     }
     setSavingEdit(true);
